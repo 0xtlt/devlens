@@ -1,0 +1,37 @@
+{
+  "name": "devlens",
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Lightweight frontend devtools panel for any web app",
+  "main": "./dist/devlens.cjs",
+  "module": "./dist/devlens.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/devlens.mjs",
+      "require": "./dist/devlens.cjs",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "check": "tsc --noEmit"
+  },
+  "keywords": [
+    "devtools",
+    "frontend",
+    "debug",
+    "developer-tools"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^25.5.2",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.4",
+    "vite-plugin-dts": "^4.5.4"
+  }
+}
