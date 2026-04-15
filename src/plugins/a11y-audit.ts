@@ -14,7 +14,7 @@ interface AuditIssue {
   category: string
   message: string
   element?: string
-  target?: Element
+  targets?: Element[]
   count: number
 }
 
@@ -66,12 +66,16 @@ function hasAccessibleName(el: Element): boolean {
 function runAudit(): AuditIssue[] {
   const issues: AuditIssue[] = []
 
-  function add(severity: Severity, category: string, message: string, element?: string, target?: Element) {
+  function add(severity: Severity, category: string, message: string, element?: string, target?: Element | Element[]) {
+    const targets = Array.isArray(target) ? target : target ? [target] : undefined
     const existing = issues.find((i) => i.message === message && i.element === element)
     if (existing) {
       existing.count++
+      if (targets && targets.length) {
+        existing.targets = [...(existing.targets || []), ...targets]
+      }
     } else {
-      issues.push({ severity, category, message, element, target, count: 1 })
+      issues.push({ severity, category, message, element, targets, count: 1 })
     }
   }
 
@@ -99,7 +103,8 @@ function runAudit(): AuditIssue[] {
     // Fixed message (no count) so the dedup key stays stable even when
     // the page's h1 count keeps changing — e.g. an infinite slider that
     // swaps clones in and out would otherwise spam a new toast per tick.
-    add('warn', 'Structure', 'Multiple &lt;h1&gt; elements — should be unique', undefined, firstVisible(h1s))
+    // Every h1 is passed as a target so renderHighlights marks them all.
+    add('warn', 'Structure', 'Multiple &lt;h1&gt; elements — should be unique', undefined, [...h1s])
   }
 
   const images = document.querySelectorAll('img:not([alt])')
@@ -163,9 +168,9 @@ function runAudit(): AuditIssue[] {
   for (const [id, list] of idMap) {
     if (list.length > 1) {
       // Fixed message (no count) keeps the dedup stable across scans
-      // where the duplicate count fluctuates. Target the first visible
-      // match so the scroll-to-locate actually jumps somewhere useful.
-      add('warn', 'IDs', `Duplicate id="${id}" — breaks label/aria associations`, undefined, firstVisible(list))
+      // where the duplicate count fluctuates. All duplicates are passed
+      // as targets so every offending element gets its own highlight.
+      add('warn', 'IDs', `Duplicate id="${id}" — breaks label/aria associations`, undefined, list)
     }
   }
 
@@ -290,15 +295,18 @@ export function a11yAuditPlugin(): DevLensPlugin {
     clearHighlights()
     if (!showHighlights) return
 
-    // Group issues by target element
+    // Group issues by target element. A single issue can carry several
+    // targets (e.g. every duplicate h1), so we iterate targets[].
     const grouped = new Map<Element, AuditIssue[]>()
     for (const issue of issues) {
-      if (!issue.target || !document.body.contains(issue.target)) continue
-      const el = issue.target as HTMLElement
-      if (el.closest('#devlens')) continue
-      const list = grouped.get(el) || []
-      list.push(issue)
-      grouped.set(el, list)
+      if (!issue.targets) continue
+      for (const target of issue.targets) {
+        if (!document.body.contains(target)) continue
+        if ((target as HTMLElement).closest('#devlens')) continue
+        const list = grouped.get(target) || []
+        list.push(issue)
+        grouped.set(target, list)
+      }
     }
 
     for (const [el, elIssues] of grouped) {
@@ -446,8 +454,9 @@ export function a11yAuditPlugin(): DevLensPlugin {
                     orderedIssues.push(issue)
                     const style = SEVERITY_STYLES[issue.severity]
                     const countBadge = issue.count > 1 ? `<span style="background:${style.border};color:#fff;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;">×${issue.count}</span>` : ''
-                    const clickable = issue.target ? 'cursor:pointer;' : ''
-                    const hint = issue.target ? ` title="Click to locate on page"` : ''
+                    const hasTarget = !!(issue.targets && issue.targets.length > 0)
+                    const clickable = hasTarget ? 'cursor:pointer;' : ''
+                    const hint = hasTarget ? ` title="Click to locate on page"` : ''
                     return `
                       <div data-issue-idx="${idx}"${hint} style="padding:6px 8px;background:${style.bg};border-left:3px solid ${style.border};border-radius:4px;margin-bottom:3px;font-size:12px;${clickable}">
                         <div style="display:flex;align-items:start;justify-content:space-between;gap:6px;">
@@ -496,9 +505,10 @@ export function a11yAuditPlugin(): DevLensPlugin {
         root.querySelectorAll<HTMLElement>('[data-issue-idx]').forEach((row) => {
           const idx = Number(row.getAttribute('data-issue-idx'))
           const issue = orderedIssues[idx]
-          if (!issue || !issue.target) return
+          if (!issue || !issue.targets || issue.targets.length === 0) return
           row.addEventListener('click', () => {
-            if (issue.target) flashIssueTarget(issue.target)
+            const target = firstVisible(issue.targets!) || issue.targets![0]
+            if (target) flashIssueTarget(target)
           })
         })
       }

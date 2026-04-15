@@ -1,6 +1,6 @@
 {
   "name": "@0xtlt/devlens",
-  "version": "0.2.6",
+  "version": "0.2.7",
   "type": "module",
   "description": "Lightweight frontend devtools panel for any web app",
   "author": "Thomas Tastet",
