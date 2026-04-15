@@ -65,12 +65,17 @@ function injectBadgeStyles() {
   document.head.append(style)
 }
 
+interface TabBadgeEntry {
+  badge: HTMLElement
+  target: HTMLElement
+}
+
 export function a11yTabOrderPlugin(): DevLensPlugin {
   let active = loadActive()
-  let badges: HTMLElement[] = []
-  let scrollHandler: (() => void) | null = null
-  let resizeHandler: (() => void) | null = null
+  let badgeEntries: TabBadgeEntry[] = []
   let refreshTimer: ReturnType<typeof setInterval> | null = null
+  let viewportTicking = false
+  let viewportListenersAttached = false
 
   function getFocusableElements(): HTMLElement[] {
     return [...document.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)]
@@ -82,8 +87,8 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
   }
 
   function clearBadges() {
-    for (const b of badges) b.remove()
-    badges = []
+    for (const entry of badgeEntries) entry.badge.remove()
+    badgeEntries = []
   }
 
   function renderBadges() {
@@ -91,8 +96,8 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
     if (!active) return
 
     const elements = getFocusableElements()
-    const scrollX = window.scrollX
-    const scrollY = window.scrollY
+    const sx = window.scrollX
+    const sy = window.scrollY
 
     for (let i = 0; i < elements.length; i++) {
       const el = elements[i]
@@ -102,8 +107,8 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
       const badge = document.createElement('div')
       badge.className = OVERLAY_CLASS
       badge.setAttribute('data-devlens', '')
-      badge.style.left = `${rect.left + scrollX}px`
-      badge.style.top = `${rect.top + scrollY}px`
+      badge.style.left = `${rect.left + sx}px`
+      badge.style.top = `${rect.top + sy}px`
       badge.style.width = `${rect.width}px`
       badge.style.height = `${rect.height}px`
 
@@ -113,8 +118,53 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
       badge.append(num)
 
       document.body.append(badge)
-      badges.push(badge)
+      badgeEntries.push({ badge, target: el })
     }
+  }
+
+  function updateBadgePositions() {
+    if (!active) return
+    const sx = window.scrollX
+    const sy = window.scrollY
+    for (const entry of badgeEntries) {
+      if (!document.body.contains(entry.target)) {
+        entry.badge.style.display = 'none'
+        continue
+      }
+      const rect = entry.target.getBoundingClientRect()
+      if (rect.width === 0 || rect.height === 0) {
+        entry.badge.style.display = 'none'
+        continue
+      }
+      entry.badge.style.display = ''
+      entry.badge.style.left = `${rect.left + sx}px`
+      entry.badge.style.top = `${rect.top + sy}px`
+      entry.badge.style.width = `${rect.width}px`
+      entry.badge.style.height = `${rect.height}px`
+    }
+  }
+
+  function onViewportChange() {
+    if (viewportTicking) return
+    viewportTicking = true
+    requestAnimationFrame(() => {
+      updateBadgePositions()
+      viewportTicking = false
+    })
+  }
+
+  function attachViewportListeners() {
+    if (viewportListenersAttached) return
+    viewportListenersAttached = true
+    window.addEventListener('scroll', onViewportChange, { passive: true, capture: true })
+    window.addEventListener('resize', onViewportChange, { passive: true })
+  }
+
+  function detachViewportListeners() {
+    if (!viewportListenersAttached) return
+    viewportListenersAttached = false
+    window.removeEventListener('scroll', onViewportChange, { capture: true } as EventListenerOptions)
+    window.removeEventListener('resize', onViewportChange)
   }
 
   function start() {
@@ -123,10 +173,9 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
     saveActive(true)
     injectBadgeStyles()
     renderBadges()
-    scrollHandler = () => renderBadges()
-    resizeHandler = () => renderBadges()
-    window.addEventListener('scroll', scrollHandler, { passive: true })
-    window.addEventListener('resize', resizeHandler)
+    attachViewportListeners()
+    // Full re-scan every 3s to pick up newly added / removed focusable
+    // elements. Scroll and resize go through the in-place update path.
     refreshTimer = setInterval(renderBadges, 3000)
   }
 
@@ -135,11 +184,8 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
     active = false
     saveActive(false)
     clearBadges()
-    if (scrollHandler) window.removeEventListener('scroll', scrollHandler)
-    if (resizeHandler) window.removeEventListener('resize', resizeHandler)
+    detachViewportListeners()
     if (refreshTimer) clearInterval(refreshTimer)
-    scrollHandler = null
-    resizeHandler = null
     refreshTimer = null
   }
 

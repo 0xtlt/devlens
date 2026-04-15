@@ -161,20 +161,77 @@ function runAudit(): AuditIssue[] {
   return issues
 }
 
+interface HighlightEntry {
+  box: HTMLElement
+  badge: HTMLElement
+  target: Element
+  // Offsets from the current target rect, captured at creation time.
+  // On scroll we only re-read the rect and apply these deltas — no DOM
+  // churn and no overlap re-computation.
+  badgeLeftDelta: number
+  badgeTopDelta: number
+}
+
 export function a11yAuditPlugin(): DevLensPlugin {
   let observer: MutationObserver | null = null
-  let highlights: HTMLElement[] = []
+  let highlightEntries: HighlightEntry[] = []
   let lastIssueKeys = new Set<string>()
   let scanTimeout: ReturnType<typeof setTimeout> | null = null
   let showHighlights = true
+  let viewportTicking = false
+  let viewportListenersAttached = false
 
   function issueKey(i: AuditIssue): string {
     return `${i.severity}:${i.category}:${i.message}:${i.element || ''}`
   }
 
   function clearHighlights() {
-    for (const h of highlights) h.remove()
-    highlights = []
+    for (const entry of highlightEntries) {
+      entry.box.remove()
+      entry.badge.remove()
+    }
+    highlightEntries = []
+  }
+
+  function updateHighlightPositions() {
+    for (const entry of highlightEntries) {
+      if (!document.body.contains(entry.target)) {
+        entry.box.style.display = 'none'
+        entry.badge.style.display = 'none'
+        continue
+      }
+      const rect = (entry.target as HTMLElement).getBoundingClientRect()
+      if (rect.width === 0 && rect.height === 0) {
+        entry.box.style.display = 'none'
+        entry.badge.style.display = 'none'
+        continue
+      }
+      entry.box.style.display = ''
+      entry.badge.style.display = ''
+      entry.box.style.left = `${rect.left}px`
+      entry.box.style.top = `${rect.top}px`
+      entry.box.style.width = `${rect.width}px`
+      entry.box.style.height = `${rect.height}px`
+      entry.badge.style.left = `${rect.right + entry.badgeLeftDelta}px`
+      entry.badge.style.top = `${rect.top + entry.badgeTopDelta}px`
+    }
+  }
+
+  function onViewportChange() {
+    if (viewportTicking) return
+    viewportTicking = true
+    requestAnimationFrame(() => {
+      updateHighlightPositions()
+      viewportTicking = false
+    })
+  }
+
+  function attachViewportListeners() {
+    if (viewportListenersAttached) return
+    viewportListenersAttached = true
+    // capture: true so we catch scrolls from nested scroll containers too.
+    window.addEventListener('scroll', onViewportChange, { passive: true, capture: true })
+    window.addEventListener('resize', onViewportChange, { passive: true })
   }
 
   function renderHighlights(issues: AuditIssue[]) {
@@ -236,16 +293,25 @@ export function a11yAuditPlugin(): DevLensPlugin {
         }
       }
 
-      badge.style.left = `${rect.right - 4}px`
+      const badgeLeft = rect.right - 4
+      badge.style.left = `${badgeLeft}px`
       badge.style.top = `${badgeTop}px`
       badgeBottoms.push(badgeTop + badgeHeight)
 
       document.body.append(highlight)
       document.body.append(badge)
       badge.setAttribute('data-devlens', '')
-      highlights.push(highlight)
-      highlights.push(badge)
+
+      highlightEntries.push({
+        box: highlight,
+        badge,
+        target: el,
+        badgeLeftDelta: badgeLeft - rect.right,
+        badgeTopDelta: badgeTop - rect.top,
+      })
     }
+
+    attachViewportListeners()
   }
 
   function scan() {

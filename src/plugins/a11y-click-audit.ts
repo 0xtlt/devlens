@@ -111,11 +111,13 @@ export function a11yClickAuditPlugin(): DevLensPlugin {
     const rect = el.getBoundingClientRect()
     const flash = document.createElement('div')
     flash.setAttribute('data-devlens', '')
+    // Absolute + document coords so the flash stays pinned to the
+    // clicked element if the user scrolls during the 2s fade.
     flash.style.cssText = `
-      position:fixed;z-index:999996;pointer-events:none;
+      position:absolute;z-index:999996;pointer-events:none;
       border:2px dashed #e94560;border-radius:4px;
       background:rgba(233,69,96,0.12);
-      left:${rect.left}px;top:${rect.top}px;
+      left:${rect.left + window.scrollX}px;top:${rect.top + window.scrollY}px;
       width:${rect.width}px;height:${rect.height}px;
       transition:opacity 2s ease;
     `

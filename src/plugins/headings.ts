@@ -134,13 +134,15 @@ export function headingsPlugin(): DevLensPlugin {
     clearHighlight()
     const rect = target.getBoundingClientRect()
     if (rect.width === 0 && rect.height === 0) return
+    // Absolute + document coords so the box stays locked to the target
+    // during the smooth scrollIntoView animation below.
     const box = document.createElement('div')
     box.setAttribute('data-devlens', '')
     box.style.cssText = `
-      position:fixed;z-index:999995;pointer-events:none;
+      position:absolute;z-index:999995;pointer-events:none;
       border:2px solid #4ea8de;border-radius:4px;
       background:rgba(78, 168, 222, 0.12);
-      left:${rect.left}px;top:${rect.top}px;
+      left:${rect.left + window.scrollX}px;top:${rect.top + window.scrollY}px;
       width:${rect.width}px;height:${rect.height}px;
       transition:opacity 0.5s;
     `
