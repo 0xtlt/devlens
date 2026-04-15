@@ -121,6 +121,28 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
   let rerenderTimeout: ReturnType<typeof setTimeout> | null = null
   let viewportTicking = false
   let viewportListenersAttached = false
+  // All badges live inside a single fixed-position, overflow-hidden
+  // container pinned to the viewport. This prevents badges near the
+  // page edges from inflating document.body's scrollable area and
+  // creating phantom horizontal/vertical scrollbars.
+  let badgeRoot: HTMLDivElement | null = null
+
+  function ensureBadgeRoot(): HTMLDivElement {
+    if (badgeRoot && document.body.contains(badgeRoot)) return badgeRoot
+    badgeRoot = document.createElement('div')
+    badgeRoot.setAttribute('data-devlens', '')
+    badgeRoot.style.cssText = `
+      position:fixed;top:0;left:0;right:0;bottom:0;
+      overflow:hidden;pointer-events:none;z-index:999996;
+    `
+    document.body.append(badgeRoot)
+    return badgeRoot
+  }
+
+  function removeBadgeRoot() {
+    badgeRoot?.remove()
+    badgeRoot = null
+  }
 
   function getFocusableElements(): HTMLElement[] {
     return [...document.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)]
@@ -135,10 +157,9 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
   function renderBadges() {
     clearBadges()
     if (!active) return
+    const root = ensureBadgeRoot()
 
     const elements = getFocusableElements()
-    const sx = window.scrollX
-    const sy = window.scrollY
 
     for (let i = 0; i < elements.length; i++) {
       const el = elements[i]
@@ -148,8 +169,11 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
       const badge = document.createElement('div')
       badge.className = OVERLAY_CLASS
       badge.setAttribute('data-devlens', '')
-      badge.style.left = `${rect.left + sx}px`
-      badge.style.top = `${rect.top + sy}px`
+      // Viewport coordinates: the parent is a fixed container pinned to
+      // the viewport, so the badge's absolute offsets are already in the
+      // right frame of reference — no scroll math needed here.
+      badge.style.left = `${rect.left}px`
+      badge.style.top = `${rect.top}px`
       badge.style.width = `${rect.width}px`
       badge.style.height = `${rect.height}px`
 
@@ -158,15 +182,13 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
       num.textContent = String(i + 1)
       badge.append(num)
 
-      document.body.append(badge)
+      root.append(badge)
       badgeEntries.push({ badge, target: el })
     }
   }
 
   function updateBadgePositions() {
     if (!active) return
-    const sx = window.scrollX
-    const sy = window.scrollY
     for (const entry of badgeEntries) {
       if (!document.body.contains(entry.target)) {
         entry.badge.style.display = 'none'
@@ -178,8 +200,8 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
         continue
       }
       entry.badge.style.display = ''
-      entry.badge.style.left = `${rect.left + sx}px`
-      entry.badge.style.top = `${rect.top + sy}px`
+      entry.badge.style.left = `${rect.left}px`
+      entry.badge.style.top = `${rect.top}px`
       entry.badge.style.width = `${rect.width}px`
       entry.badge.style.height = `${rect.height}px`
     }
@@ -262,6 +284,7 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
     active = false
     saveActive(false)
     clearBadges()
+    removeBadgeRoot()
     detachViewportListeners()
     stopObserver()
   }

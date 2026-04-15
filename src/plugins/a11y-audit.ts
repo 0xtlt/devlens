@@ -237,6 +237,33 @@ export function a11yAuditPlugin(): DevLensPlugin {
     window.addEventListener('resize', onViewportChange, { passive: true })
   }
 
+  // Scrolls the target into view and draws a short-lived bright outline
+  // on top of it. Invoked when the user clicks an issue row in the panel.
+  // Uses position:absolute + document coordinates so the flash stays
+  // locked to the target during the smooth-scroll animation.
+  function flashIssueTarget(el: Element) {
+    if (!document.body.contains(el)) return
+    ;(el as HTMLElement).scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const rect = (el as HTMLElement).getBoundingClientRect()
+    if (rect.width === 0 && rect.height === 0) return
+    const flash = document.createElement('div')
+    flash.setAttribute('data-devlens', '')
+    flash.style.cssText = `
+      position:absolute;z-index:999997;pointer-events:none;
+      border:3px solid #4ea8de;border-radius:4px;
+      background:rgba(78, 168, 222, 0.15);
+      box-shadow:0 0 24px rgba(78, 168, 222, 0.55);
+      left:${rect.left + window.scrollX}px;top:${rect.top + window.scrollY}px;
+      width:${rect.width}px;height:${rect.height}px;
+      transition:opacity 0.6s ease;
+    `
+    document.body.append(flash)
+    setTimeout(() => {
+      flash.style.opacity = '0'
+      setTimeout(() => flash.remove(), 600)
+    }, 900)
+  }
+
   function renderHighlights(issues: AuditIssue[]) {
     clearHighlights()
     if (!showHighlights) return
@@ -379,6 +406,10 @@ export function a11yAuditPlugin(): DevLensPlugin {
 
         const categories = [...new Set(issues.map((i) => i.category))]
 
+        // Flat index → issue, populated in render order so click
+        // handlers can look up the right issue by data-issue-idx.
+        const orderedIssues: AuditIssue[] = []
+
         const issueRows = issues.length === 0
           ? `<div style="padding:8px 10px;background:#1a3a1a;border-radius:4px;border-left:3px solid #4caf50;font-size:12px;color:#8a8a9a;">
               No accessibility issues detected!
@@ -389,10 +420,14 @@ export function a11yAuditPlugin(): DevLensPlugin {
                 <div style="margin-bottom:10px;">
                   <div style="font-size:11px;color:#8a8a9a;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px;">${cat}</div>
                   ${catIssues.map((issue) => {
+                    const idx = orderedIssues.length
+                    orderedIssues.push(issue)
                     const style = SEVERITY_STYLES[issue.severity]
                     const countBadge = issue.count > 1 ? `<span style="background:${style.border};color:#fff;border-radius:3px;padding:0 5px;font-size:10px;font-weight:600;">×${issue.count}</span>` : ''
+                    const clickable = issue.target ? 'cursor:pointer;' : ''
+                    const hint = issue.target ? ` title="Click to locate on page"` : ''
                     return `
-                      <div style="padding:6px 8px;background:${style.bg};border-left:3px solid ${style.border};border-radius:4px;margin-bottom:3px;font-size:12px;">
+                      <div data-issue-idx="${idx}"${hint} style="padding:6px 8px;background:${style.bg};border-left:3px solid ${style.border};border-radius:4px;margin-bottom:3px;font-size:12px;${clickable}">
                         <div style="display:flex;align-items:start;justify-content:space-between;gap:6px;">
                           <span>${style.icon} ${issue.message}</span>
                           ${countBadge}
@@ -434,6 +469,15 @@ export function a11yAuditPlugin(): DevLensPlugin {
           showHighlights = !showHighlights
           if (!showHighlights) clearHighlights()
           render()
+        })
+
+        root.querySelectorAll<HTMLElement>('[data-issue-idx]').forEach((row) => {
+          const idx = Number(row.getAttribute('data-issue-idx'))
+          const issue = orderedIssues[idx]
+          if (!issue || !issue.target) return
+          row.addEventListener('click', () => {
+            if (issue.target) flashIssueTarget(issue.target)
+          })
         })
       }
 
