@@ -4,8 +4,8 @@
  * click that lands on a non-semantic element (div/span/img) with a
  * handler is flagged as a keyboard-accessibility trap.
  */
-import type { DevLensPlugin } from '../types'
-import { showToast } from '../toasts'
+import type { DevLensPlugin } from '../types.js'
+import { showToast } from '../toasts.js'
 
 const STORAGE_KEY = 'devlens:a11y-click'
 

@@ -4,8 +4,8 @@
  * canonical URL, robots meta, charset, viewport, hreflang, JSON-LD and
  * heading presence. Classifies each issue as error / warn / info.
  */
-import type { DevLensPlugin } from '../types'
-import { showToast } from '../toasts'
+import type { DevLensPlugin } from '../types.js'
+import { showToast } from '../toasts.js'
 
 type Severity = 'error' | 'warn' | 'info'
 

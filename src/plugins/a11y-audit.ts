@@ -4,8 +4,8 @@
  * duplicate ids, autoplaying media…) and draws overlays on offenders.
  * Re-scans on DOM mutations and every 3s when the tab is open.
  */
-import type { DevLensPlugin } from '../types'
-import { showToast } from '../toasts'
+import type { DevLensPlugin } from '../types.js'
+import { showToast } from '../toasts.js'
 
 type Severity = 'error' | 'warn'
 

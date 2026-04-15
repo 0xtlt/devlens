@@ -4,8 +4,8 @@
  * hidden headings. Click any row in the outline to scroll to the element
  * and flash it on the page.
  */
-import type { DevLensPlugin } from '../types'
-import { showToast } from '../toasts'
+import type { DevLensPlugin } from '../types.js'
+import { showToast } from '../toasts.js'
 
 type Severity = 'error' | 'warn' | 'info'
 

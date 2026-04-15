@@ -3,7 +3,7 @@
  * elements that mutate frequently. Color ramps from teal (x1–2) to red
  * (x15+) so "hot" DOM zones are obvious at a glance.
  */
-import type { DevLensPlugin } from '../types'
+import type { DevLensPlugin } from '../types.js'
 
 interface HotSpot {
   count: number

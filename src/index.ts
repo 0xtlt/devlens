@@ -4,19 +4,19 @@
  * Call {@link devlens} once at startup to mount the panel, passing the
  * plugins you want to enable. See the README for the full plugin list.
  */
-import { createPanel } from './panel'
-import { defaultConfig } from './config'
-import type { DevLensConfig } from './types'
+import { createPanel } from './panel.js'
+import { defaultConfig } from './config.js'
+import type { DevLensConfig } from './types.js'
 
-export type { DevLensConfig, DevLensPlugin } from './types'
-export { networkPlugin } from './plugins/network'
-export { repaintsPlugin } from './plugins/repaints'
-export { consolePlugin } from './plugins/console'
-export { a11yTabOrderPlugin } from './plugins/a11y-tab-order'
-export { a11yClickAuditPlugin } from './plugins/a11y-click-audit'
-export { a11yAuditPlugin } from './plugins/a11y-audit'
-export { seoPlugin } from './plugins/seo'
-export { headingsPlugin } from './plugins/headings'
+export type { DevLensConfig, DevLensPlugin } from './types.js'
+export { networkPlugin } from './plugins/network.js'
+export { repaintsPlugin } from './plugins/repaints.js'
+export { consolePlugin } from './plugins/console.js'
+export { a11yTabOrderPlugin } from './plugins/a11y-tab-order.js'
+export { a11yClickAuditPlugin } from './plugins/a11y-click-audit.js'
+export { a11yAuditPlugin } from './plugins/a11y-audit.js'
+export { seoPlugin } from './plugins/seo.js'
+export { headingsPlugin } from './plugins/headings.js'
 
 let panelInstance: ReturnType<typeof createPanel> | null = null
 

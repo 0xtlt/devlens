@@ -2,8 +2,8 @@
  * Panel shell — builds the floating DOM, handles open/close, keyboard
  * shortcut, plugin switching, and persists UI state to sessionStorage.
  */
-import type { DevLensConfig, DevLensPlugin } from './types'
-import { injectStyles } from './styles'
+import type { DevLensConfig, DevLensPlugin } from './types.js'
+import { injectStyles } from './styles.js'
 
 const STORAGE_KEY = 'devlens'
 

@@ -3,7 +3,7 @@
  * group them by domain, and surface warnings about slow or oversized
  * transfers. Read-only: it never patches `fetch` or `XMLHttpRequest`.
  */
-import type { DevLensPlugin } from '../types'
+import type { DevLensPlugin } from '../types.js'
 
 interface NetworkWarning {
   level: 'warn' | 'error'

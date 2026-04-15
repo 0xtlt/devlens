@@ -12,19 +12,20 @@
     "url": "https://github.com/0xtlt/devlens/issues"
   },
   "homepage": "https://github.com/0xtlt/devlens#readme",
-  "main": "./dist/devlens.cjs",
   "module": "./dist/devlens.mjs",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/src/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/devlens.mjs",
-      "require": "./dist/devlens.cjs",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/src/index.d.ts",
+      "import": "./dist/devlens.mjs"
     }
   },
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",

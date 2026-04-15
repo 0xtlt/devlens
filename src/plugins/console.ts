@@ -3,9 +3,9 @@
  * and unhandled promise rejections, then mirrors them as toasts (when
  * active) and keeps the last 50 entries for the panel list.
  */
-import type { DevLensPlugin } from '../types'
-import { showToast } from '../toasts'
-import type { ToastLevel } from '../toasts'
+import type { DevLensPlugin } from '../types.js'
+import { showToast } from '../toasts.js'
+import type { ToastLevel } from '../toasts.js'
 
 interface LogEntry {
   level: ToastLevel

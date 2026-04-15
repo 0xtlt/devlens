@@ -3,7 +3,7 @@
  * order the keyboard will visit them, so tab traps and positive tabindex
  * values become visible.
  */
-import type { DevLensPlugin } from '../types'
+import type { DevLensPlugin } from '../types.js'
 
 const STORAGE_KEY = 'devlens:a11y-tab'
 const OVERLAY_CLASS = 'devlens-tab-badge'
