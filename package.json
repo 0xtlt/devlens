@@ -1,8 +1,17 @@
 {
-  "name": "devlens",
+  "name": "@0xtlt/devlens",
   "version": "0.1.0",
   "type": "module",
   "description": "Lightweight frontend devtools panel for any web app",
+  "author": "Thomas Tastet",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/0xtlt/devlens.git"
+  },
+  "bugs": {
+    "url": "https://github.com/0xtlt/devlens/issues"
+  },
+  "homepage": "https://github.com/0xtlt/devlens#readme",
   "main": "./dist/devlens.cjs",
   "module": "./dist/devlens.mjs",
   "types": "./dist/index.d.ts",

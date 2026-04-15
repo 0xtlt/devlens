@@ -7,9 +7,9 @@ Built in vanilla TypeScript. No runtime dependencies. ~20 KB gzipped for the ful
 ## Install
 
 ```bash
-npm install devlens
+npm install @0xtlt/devlens
 # or
-bun add devlens
+bun add @0xtlt/devlens
 ```
 
 ## Quick start
@@ -25,7 +25,7 @@ import {
   a11yClickAuditPlugin,
   seoPlugin,
   headingsPlugin,
-} from 'devlens'
+} from '@0xtlt/devlens'
 
 devlens({
   plugins: [
@@ -47,7 +47,7 @@ Only load DevLens in development — it mutates the DOM and patches a few global
 
 ```ts
 if (import.meta.env.DEV) {
-  const { devlens, consolePlugin /* … */ } = await import('devlens')
+  const { devlens, consolePlugin /* … */ } = await import('@0xtlt/devlens')
   devlens({ plugins: [consolePlugin()] })
 }
 ```
