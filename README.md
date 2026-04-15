@@ -15,30 +15,17 @@ bun add @0xtlt/devlens
 ## Quick start
 
 ```ts
-import {
-  devlens,
-  networkPlugin,
-  repaintsPlugin,
-  consolePlugin,
-  a11yAuditPlugin,
-  a11yTabOrderPlugin,
-  a11yClickAuditPlugin,
-  seoPlugin,
-  headingsPlugin,
-} from '@0xtlt/devlens'
+import { devlens, allPlugins } from '@0xtlt/devlens'
 
-devlens({
-  plugins: [
-    networkPlugin(),
-    repaintsPlugin(),
-    consolePlugin(),
-    a11yAuditPlugin(),
-    a11yTabOrderPlugin(),
-    a11yClickAuditPlugin(),
-    seoPlugin(),
-    headingsPlugin(),
-  ],
-})
+devlens({ plugins: allPlugins() })
+```
+
+Or pick only the plugins you need:
+
+```ts
+import { devlens, consolePlugin, seoPlugin } from '@0xtlt/devlens'
+
+devlens({ plugins: [consolePlugin(), seoPlugin()] })
 ```
 
 The panel mounts in the bottom-right corner. Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd> or click the 🔍 button to open it.
@@ -113,6 +100,14 @@ interface PanelController {
 }
 ```
 
+### `allPlugins()`
+
+Returns a fresh instance of every built-in plugin, ready to be passed to `devlens({ plugins: ... })`. Use this when you want the full experience without picking plugins individually.
+
+```ts
+function allPlugins(): DevLensPlugin[]
+```
+
 ### `destroyDevlens()`
 
 Tear down the current panel and release the singleton slot so `devlens()` can be called again.
@@ -148,7 +143,8 @@ The panel clears every `[data-interval]` descendant on unmount, so you don't hav
 bun install
 bun run dev      # Vite dev server with the playground at index.html
 bun run check    # TypeScript type-check
-bun run build    # library build (ESM + CJS + d.ts) to dist/
+bun run lint     # ESLint
+bun run build    # library build (ESM + d.ts) to dist/
 ```
 
 The `dev/` folder holds the playground (`dev/main.ts`) that registers every plugin against `index.html` for manual testing.
@@ -157,7 +153,7 @@ The `dev/` folder holds the playground (`dev/main.ts`) that registers every plug
 
 ```
 src/
-  index.ts         Public entry — exports devlens() and every plugin factory
+  index.ts         Public entry — exports devlens(), allPlugins() and every plugin factory
   panel.ts         Panel shell, tab switching, keyboard shortcut
   styles.ts        Injected CSS for the panel chrome
   toasts.ts        Top-right toast notifications used by plugins
@@ -177,7 +173,7 @@ src/
 ### Writing a new plugin
 
 1. Create `src/plugins/my-plugin.ts` that exports a factory returning a `DevLensPlugin`.
-2. Export it from `src/index.ts`.
+2. Export it from `src/index.ts` and add it to the `allPlugins()` helper so users who opt into everything get it for free.
 3. Register it in `dev/main.ts` so the playground picks it up.
 4. Follow the existing patterns: vanilla DOM, inline styles, `data-devlens` on overlays, `data-interval` on your refresh loop.
 

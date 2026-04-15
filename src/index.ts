@@ -6,7 +6,15 @@
  */
 import { createPanel } from './panel.js'
 import { defaultConfig } from './config.js'
-import type { DevLensConfig } from './types.js'
+import type { DevLensConfig, DevLensPlugin } from './types.js'
+import { networkPlugin } from './plugins/network.js'
+import { repaintsPlugin } from './plugins/repaints.js'
+import { consolePlugin } from './plugins/console.js'
+import { a11yTabOrderPlugin } from './plugins/a11y-tab-order.js'
+import { a11yClickAuditPlugin } from './plugins/a11y-click-audit.js'
+import { a11yAuditPlugin } from './plugins/a11y-audit.js'
+import { seoPlugin } from './plugins/seo.js'
+import { headingsPlugin } from './plugins/headings.js'
 
 export type { DevLensConfig, DevLensPlugin } from './types.js'
 export { networkPlugin } from './plugins/network.js'
@@ -17,6 +25,30 @@ export { a11yClickAuditPlugin } from './plugins/a11y-click-audit.js'
 export { a11yAuditPlugin } from './plugins/a11y-audit.js'
 export { seoPlugin } from './plugins/seo.js'
 export { headingsPlugin } from './plugins/headings.js'
+
+/**
+ * Returns a fresh instance of every built-in plugin, ready to be passed
+ * to {@link devlens}. Handy for a one-line setup when you want the full
+ * experience without picking plugins individually.
+ *
+ * @example
+ * ```ts
+ * import { devlens, allPlugins } from '@0xtlt/devlens'
+ * devlens({ plugins: allPlugins() })
+ * ```
+ */
+export function allPlugins(): DevLensPlugin[] {
+  return [
+    networkPlugin(),
+    repaintsPlugin(),
+    consolePlugin(),
+    a11yAuditPlugin(),
+    a11yTabOrderPlugin(),
+    a11yClickAuditPlugin(),
+    seoPlugin(),
+    headingsPlugin(),
+  ]
+}
 
 let panelInstance: ReturnType<typeof createPanel> | null = null
 
