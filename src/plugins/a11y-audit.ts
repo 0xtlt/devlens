@@ -37,6 +37,19 @@ function preview(el: Element): string {
   return `&lt;${tag}${id}${cls}&gt;`
 }
 
+// Returns the first element in the list that is actually laid out on
+// the page (has a non-zero bounding rect). Falls back to the first
+// element in document order if none is visible — better than returning
+// nothing when the audit needs a target to scroll to.
+function firstVisible<T extends Element>(elements: ArrayLike<T>): T | undefined {
+  for (let i = 0; i < elements.length; i++) {
+    const el = elements[i]
+    const rect = (el as unknown as HTMLElement).getBoundingClientRect()
+    if (rect.width > 0 || rect.height > 0) return el
+  }
+  return elements[0]
+}
+
 function hasAccessibleName(el: Element): boolean {
   if (el.getAttribute('aria-label')) return true
   if (el.getAttribute('aria-labelledby')) return true
@@ -81,9 +94,12 @@ function runAudit(): AuditIssue[] {
     prevLevel = level
   }
 
-  const h1s = document.querySelectorAll('h1')
+  const h1s = document.querySelectorAll<HTMLHeadingElement>('h1')
   if (h1s.length > 1) {
-    add('warn', 'Structure', `${h1s.length} &lt;h1&gt; elements found — should be unique`, undefined, h1s[0])
+    // Fixed message (no count) so the dedup key stays stable even when
+    // the page's h1 count keeps changing — e.g. an infinite slider that
+    // swaps clones in and out would otherwise spam a new toast per tick.
+    add('warn', 'Structure', 'Multiple &lt;h1&gt; elements — should be unique', undefined, firstVisible(h1s))
   }
 
   const images = document.querySelectorAll('img:not([alt])')
@@ -135,18 +151,21 @@ function runAudit(): AuditIssue[] {
   }
 
   const allIds = document.querySelectorAll('[id]')
-  const idMap = new Map<string, { count: number; first: Element }>()
+  const idMap = new Map<string, Element[]>()
   for (const el of allIds) {
     if ((el as HTMLElement).closest('#devlens')) continue
     const id = el.id
     if (!id) continue
-    const entry = idMap.get(id)
-    if (entry) entry.count++
-    else idMap.set(id, { count: 1, first: el })
+    const list = idMap.get(id) || []
+    list.push(el)
+    idMap.set(id, list)
   }
-  for (const [id, { count, first }] of idMap) {
-    if (count > 1) {
-      add('warn', 'IDs', `Duplicate id="${id}" (×${count}) — breaks label/aria associations`, undefined, first)
+  for (const [id, list] of idMap) {
+    if (list.length > 1) {
+      // Fixed message (no count) keeps the dedup stable across scans
+      // where the duplicate count fluctuates. Target the first visible
+      // match so the scroll-to-locate actually jumps somewhere useful.
+      add('warn', 'IDs', `Duplicate id="${id}" — breaks label/aria associations`, undefined, firstVisible(list))
     }
   }
 
