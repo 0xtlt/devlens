@@ -28,6 +28,15 @@ import { devlens, consolePlugin, seoPlugin } from '@0xtlt/devlens'
 devlens({ plugins: [consolePlugin(), seoPlugin()] })
 ```
 
+No bundler? Drop it into any HTML page via [esm.sh](https://esm.sh):
+
+```html
+<script type="module">
+  import { devlens, allPlugins } from 'https://esm.sh/@0xtlt/devlens'
+  devlens({ plugins: allPlugins() })
+</script>
+```
+
 The panel mounts in the bottom-right corner. Press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>D</kbd> or click the 🔍 button to open it.
 
 Only load DevLens in development — it mutates the DOM and patches a few globals (`console.error`, `console.warn`, `addEventListener`). A common pattern:
