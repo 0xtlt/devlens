@@ -64,7 +64,7 @@ function runAudit(): AuditIssue[] {
 
   const html = document.documentElement
   if (!html.getAttribute('lang')) {
-    add('error', 'Structure', 'Missing lang attribute on &lt;html&gt;')
+    add('error', 'Structure', 'Missing lang attribute on &lt;html&gt;', undefined, html)
   }
 
   if (!document.querySelector('main, [role="main"]')) {
@@ -83,7 +83,7 @@ function runAudit(): AuditIssue[] {
 
   const h1s = document.querySelectorAll('h1')
   if (h1s.length > 1) {
-    add('warn', 'Structure', `${h1s.length} &lt;h1&gt; elements found — should be unique`)
+    add('warn', 'Structure', `${h1s.length} &lt;h1&gt; elements found — should be unique`, undefined, h1s[0])
   }
 
   const images = document.querySelectorAll('img:not([alt])')
@@ -135,15 +135,18 @@ function runAudit(): AuditIssue[] {
   }
 
   const allIds = document.querySelectorAll('[id]')
-  const idMap = new Map<string, number>()
+  const idMap = new Map<string, { count: number; first: Element }>()
   for (const el of allIds) {
     if ((el as HTMLElement).closest('#devlens')) continue
     const id = el.id
-    if (id) idMap.set(id, (idMap.get(id) || 0) + 1)
+    if (!id) continue
+    const entry = idMap.get(id)
+    if (entry) entry.count++
+    else idMap.set(id, { count: 1, first: el })
   }
-  for (const [id, count] of idMap) {
+  for (const [id, { count, first }] of idMap) {
     if (count > 1) {
-      add('warn', 'IDs', `Duplicate id="${id}" (×${count}) — breaks label/aria associations`)
+      add('warn', 'IDs', `Duplicate id="${id}" (×${count}) — breaks label/aria associations`, undefined, first)
     }
   }
 
