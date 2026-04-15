@@ -232,7 +232,7 @@ function runAudit(): SEOIssue[] {
 
   const h1s = document.querySelectorAll('h1')
   if (h1s.length === 0) {
-    add('warn', 'Structure', 'No <h1> on page')
+    add('info', 'Structure', 'No <h1> on page')
   } else if (h1s.length > 1) {
     add('info', 'Structure', `${h1s.length} <h1> elements found (Google allows multiple, but one is conventional)`)
   }

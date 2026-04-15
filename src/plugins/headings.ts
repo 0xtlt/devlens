@@ -64,7 +64,6 @@ function collect(): { nodes: HeadingNode[]; issues: HeadingIssue[] } {
 
   const nodes: HeadingNode[] = []
   let prevVisibleLevel = 0
-  let firstVisibleLevel = 0
   let visibleH1Count = 0
 
   for (const el of headings) {
@@ -75,7 +74,6 @@ function collect(): { nodes: HeadingNode[]; issues: HeadingIssue[] } {
     let skip = false
 
     if (!hidden) {
-      if (firstVisibleLevel === 0) firstVisibleLevel = level
       if (level === 1) visibleH1Count++
 
       if (prevVisibleLevel > 0 && level > prevVisibleLevel + 1) {
@@ -101,16 +99,11 @@ function collect(): { nodes: HeadingNode[]; issues: HeadingIssue[] } {
 
   if (headings.length === 0) {
     add('warn', 'No headings found on page')
-  } else {
-    if (visibleH1Count === 0) {
-      add('warn', 'No visible <h1> on page')
-    } else if (visibleH1Count > 1) {
-      add('info', `${visibleH1Count} visible <h1> elements (one is conventional)`)
-    }
-    if (firstVisibleLevel > 1) {
-      add('warn', `First visible heading is <h${firstVisibleLevel}> — should start at <h1>`)
-    }
+  } else if (visibleH1Count > 1) {
+    add('info', `${visibleH1Count} visible <h1> elements (one is conventional)`)
   }
+  // Starting level (h1 vs h2) and h1 presence are conventions, not WCAG
+  // requirements — we only flag actual hierarchy skips below.
 
   return { nodes, issues }
 }
