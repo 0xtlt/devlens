@@ -194,6 +194,9 @@ export function a11yAuditPlugin(): DevLensPlugin {
   }
 
   function updateHighlightPositions() {
+    // Read scroll once per frame (cheap, but avoid N reads in the loop).
+    const sx = window.scrollX
+    const sy = window.scrollY
     for (const entry of highlightEntries) {
       if (!document.body.contains(entry.target)) {
         entry.box.style.display = 'none'
@@ -208,12 +211,12 @@ export function a11yAuditPlugin(): DevLensPlugin {
       }
       entry.box.style.display = ''
       entry.badge.style.display = ''
-      entry.box.style.left = `${rect.left}px`
-      entry.box.style.top = `${rect.top}px`
+      entry.box.style.left = `${rect.left + sx}px`
+      entry.box.style.top = `${rect.top + sy}px`
       entry.box.style.width = `${rect.width}px`
       entry.box.style.height = `${rect.height}px`
-      entry.badge.style.left = `${rect.right + entry.badgeLeftDelta}px`
-      entry.badge.style.top = `${rect.top + entry.badgeTopDelta}px`
+      entry.badge.style.left = `${rect.right + sx + entry.badgeLeftDelta}px`
+      entry.badge.style.top = `${rect.top + sy + entry.badgeTopDelta}px`
     }
   }
 
@@ -259,20 +262,25 @@ export function a11yAuditPlugin(): DevLensPlugin {
       const worstSeverity = elIssues.some((i) => i.severity === 'error') ? 'error' : 'warn'
       const colors = HIGHLIGHT_COLORS[worstSeverity]
 
+      // position:absolute + document coordinates so the browser scrolls
+      // overlays natively with the page — no per-frame JS work, no lag.
+      const sx = window.scrollX
+      const sy = window.scrollY
+
       const highlight = document.createElement('div')
       highlight.setAttribute('data-devlens', '')
       highlight.style.cssText = `
-        position:fixed;z-index:999995;pointer-events:none;
+        position:absolute;z-index:999995;pointer-events:none;
         border:2px solid ${colors.border};border-radius:4px;
         background:${colors.bg};
-        left:${rect.left}px;top:${rect.top}px;
+        left:${rect.left + sx}px;top:${rect.top + sy}px;
         width:${rect.width}px;height:${rect.height}px;
       `
 
       const badge = document.createElement('span')
       const lines = elIssues.map((i) => i.message.replace(/&lt;/g, '<').replace(/&gt;/g, '>')).join('\n')
       badge.style.cssText = `
-        position:fixed;
+        position:absolute;
         background:${colors.border};color:#fff;
         font-family:ui-monospace,monospace;font-size:9px;font-weight:700;
         padding:2px 6px;border-radius:3px;
@@ -294,8 +302,8 @@ export function a11yAuditPlugin(): DevLensPlugin {
       }
 
       const badgeLeft = rect.right - 4
-      badge.style.left = `${badgeLeft}px`
-      badge.style.top = `${badgeTop}px`
+      badge.style.left = `${badgeLeft + sx}px`
+      badge.style.top = `${badgeTop + sy}px`
       badgeBottoms.push(badgeTop + badgeHeight)
 
       document.body.append(highlight)
