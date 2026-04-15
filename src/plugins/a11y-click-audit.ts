@@ -100,7 +100,7 @@ export function a11yClickAuditPlugin(): DevLensPlugin {
   let active = loadActive()
   const issues: A11yIssue[] = []
   let clickHandler: ((e: MouseEvent) => void) | null = null
-  let flashElements: Map<HTMLElement, HTMLElement> = new Map()
+  const flashElements: Map<HTMLElement, HTMLElement> = new Map()
 
   function flashElement(el: HTMLElement) {
     if (el.closest('#devlens')) return
@@ -211,7 +211,6 @@ export function a11yClickAuditPlugin(): DevLensPlugin {
 
     onMount(container) {
       const root = container.querySelector('.devlens-click-audit') as HTMLElement
-      let refreshInterval: ReturnType<typeof setInterval> | null = null
 
       const render = () => {
         const issueRows = issues.length === 0
@@ -275,8 +274,8 @@ export function a11yClickAuditPlugin(): DevLensPlugin {
       }
 
       render()
-      refreshInterval = setInterval(render, 2000)
-      root.setAttribute('data-interval', String(refreshInterval))
+      const intervalId = setInterval(render, 2000)
+      root.setAttribute('data-interval', String(intervalId))
     },
 
     onUnmount() {},

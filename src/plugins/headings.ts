@@ -185,7 +185,6 @@ export function headingsPlugin(): DevLensPlugin {
 
     onMount(container) {
       const root = container.querySelector('.devlens-headings') as HTMLElement
-      let refreshInterval: ReturnType<typeof setInterval> | null = null
 
       const render = () => {
         const { nodes, issues } = scanAndToast()
@@ -289,8 +288,8 @@ export function headingsPlugin(): DevLensPlugin {
       }
 
       render()
-      refreshInterval = setInterval(render, 3000)
-      root.setAttribute('data-interval', String(refreshInterval))
+      const intervalId = setInterval(render, 3000)
+      root.setAttribute('data-interval', String(intervalId))
     },
 
     onUnmount() {

@@ -19,7 +19,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "lint": "eslint ."
   },
   "keywords": [
     "devtools",
@@ -29,8 +30,12 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/node": "^25.5.2",
+    "eslint": "^10.2.0",
+    "globals": "^17.5.0",
     "typescript": "~6.0.2",
+    "typescript-eslint": "^8.58.2",
     "vite": "^8.0.4",
     "vite-plugin-dts": "^4.5.4"
   }

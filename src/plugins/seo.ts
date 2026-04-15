@@ -343,7 +343,6 @@ export function seoPlugin(): DevLensPlugin {
 
     onMount(container) {
       const root = container.querySelector('.devlens-seo') as HTMLElement
-      let refreshInterval: ReturnType<typeof setInterval> | null = null
 
       const render = () => {
         const issues = scanAndToast()
@@ -406,8 +405,8 @@ export function seoPlugin(): DevLensPlugin {
       }
 
       render()
-      refreshInterval = setInterval(render, 3000)
-      root.setAttribute('data-interval', String(refreshInterval))
+      const intervalId = setInterval(render, 3000)
+      root.setAttribute('data-interval', String(intervalId))
     },
 
     onUnmount() {},

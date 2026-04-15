@@ -304,7 +304,6 @@ export function a11yAuditPlugin(): DevLensPlugin {
 
     onMount(container) {
       const root = container.querySelector('.devlens-a11y-audit') as HTMLElement
-      let refreshInterval: ReturnType<typeof setInterval> | null = null
 
       const render = () => {
         const issues = runAudit()
@@ -373,8 +372,8 @@ export function a11yAuditPlugin(): DevLensPlugin {
       }
 
       render()
-      refreshInterval = setInterval(render, 3000)
-      root.setAttribute('data-interval', String(refreshInterval))
+      const intervalId = setInterval(render, 3000)
+      root.setAttribute('data-interval', String(intervalId))
     },
 
     onUnmount() {},
