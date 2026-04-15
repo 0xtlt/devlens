@@ -1,8 +1,29 @@
+/**
+ * Panel shell — builds the floating DOM, handles open/close, keyboard
+ * shortcut, plugin switching, and persists UI state to sessionStorage.
+ */
 import type { DevLensConfig, DevLensPlugin } from './types'
 import { injectStyles } from './styles'
 
+const STORAGE_KEY = 'devlens'
+
+function loadState(): { open: boolean; tab: string | null } {
+  try {
+    const raw = sessionStorage.getItem(STORAGE_KEY)
+    if (raw) return JSON.parse(raw)
+  } catch {}
+  return { open: false, tab: null }
+}
+
+function saveState(open: boolean, tab: string | null) {
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify({ open, tab }))
+  } catch {}
+}
+
 export function createPanel(config: DevLensConfig) {
   injectStyles()
+  const savedState = loadState()
 
   const root = document.createElement('div')
   root.id = 'devlens'
@@ -26,16 +47,28 @@ export function createPanel(config: DevLensConfig) {
   root.append(toggle, container)
   document.body.append(root)
 
-  let isOpen = config.defaultOpen
+  let isOpen = savedState.open || config.defaultOpen
   let activePlugin: DevLensPlugin | null = null
 
   function updateVisibility() {
     container.classList.toggle('devlens__container--open', isOpen)
     toggle.classList.toggle('devlens__toggle--active', isOpen)
+    saveState(isOpen, activePlugin?.name ?? null)
+  }
+
+  function unmountActive() {
+    if (!activePlugin) return
+    // Clear any intervals the plugin registered via the data-interval convention.
+    // Without this, switching tabs leaks a new interval every time.
+    content.querySelectorAll<HTMLElement>('[data-interval]').forEach((el) => {
+      const id = Number(el.getAttribute('data-interval'))
+      if (id) clearInterval(id)
+    })
+    activePlugin.onUnmount?.()
   }
 
   function showPlugin(plugin: DevLensPlugin) {
-    if (activePlugin?.onUnmount) activePlugin.onUnmount()
+    unmountActive()
 
     content.innerHTML = ''
     const result = plugin.panel()
@@ -47,6 +80,7 @@ export function createPanel(config: DevLensConfig) {
 
     if (plugin.onMount) plugin.onMount(content)
     activePlugin = plugin
+    saveState(isOpen, plugin.name)
 
     nav.querySelectorAll('.devlens__nav-item').forEach((el) => {
       el.classList.toggle('devlens__nav-item--active', el.getAttribute('data-plugin') === plugin.name)
@@ -92,9 +126,8 @@ export function createPanel(config: DevLensConfig) {
   renderNav()
   updateVisibility()
 
-  if (config.plugins.length > 0) {
-    showPlugin(config.plugins[0])
-  }
+  const restoredPlugin = savedState.tab && config.plugins.find((p) => p.name === savedState.tab)
+  showPlugin(restoredPlugin || config.plugins[0])
 
   return {
     addPlugin(plugin: DevLensPlugin) {
@@ -107,7 +140,7 @@ export function createPanel(config: DevLensConfig) {
       const idx = config.plugins.findIndex((p) => p.name === name)
       if (idx === -1) return
       if (activePlugin?.name === name) {
-        activePlugin.onUnmount?.()
+        unmountActive()
         activePlugin = null
         content.innerHTML = ''
       }
@@ -131,7 +164,7 @@ export function createPanel(config: DevLensConfig) {
     },
 
     destroy() {
-      if (activePlugin?.onUnmount) activePlugin.onUnmount()
+      unmountActive()
       root.remove()
     },
   }

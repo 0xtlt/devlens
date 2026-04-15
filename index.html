@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>DevLens — Dev</title>
+    <style>
+      * { box-sizing: border-box; }
+      body { margin: 0; font-family: system-ui, sans-serif; background: #f5f5f5; color: #1a1a1a; padding: 40px; }
+      h1 { font-size: 1.5rem; margin-bottom: 4px; }
+      p { color: #666; margin-top: 0; }
+      kbd { background: #e0e0e0; border: 1px solid #ccc; border-radius: 3px; padding: 1px 6px; font-size: 0.85em; }
+      .demo { display: flex; gap: 16px; flex-wrap: wrap; margin-top: 24px; }
+      .demo-card {
+        background: #fff; border: 1px solid #e0e0e0; border-radius: 8px; padding: 20px;
+        width: 220px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      }
+      .demo-card h3 { margin: 0 0 8px; font-size: 0.95rem; }
+      .demo-card p { font-size: 0.85rem; margin: 0 0 12px; }
+      button.demo-btn {
+        padding: 8px 16px; border: 1px solid #ddd; border-radius: 6px; background: #fff;
+        cursor: pointer; font-family: inherit; font-size: 0.85rem; transition: all 0.15s;
+      }
+      button.demo-btn:hover { background: #f0f0f0; border-color: #bbb; }
+      #counter-value { font-size: 2rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+      #ticker { font-size: 0.85rem; color: #888; min-height: 1.2em; }
+    </style>
+  </head>
+  <body>
+    <h1>DevLens Playground</h1>
+    <p>Press <kbd>Ctrl+Shift+D</kbd> or click the 🔍 button to open the panel.</p>
+
+    <div class="demo">
+      <div class="demo-card">
+        <h3>Counter</h3>
+        <p>Click to trigger rapid DOM updates.</p>
+        <div id="counter-value">0</div>
+        <button class="demo-btn" id="btn-increment">+1</button>
+        <button class="demo-btn" id="btn-spam">Spam x50</button>
+      </div>
+
+      <div class="demo-card">
+        <h3>Ticker</h3>
+        <p>Auto-updates every 500ms.</p>
+        <div id="ticker"></div>
+        <button class="demo-btn" id="btn-ticker">Start ticker</button>
+      </div>
+
+      <div class="demo-card">
+        <h3>Style mutation</h3>
+        <p>Randomly changes background color.</p>
+        <div id="color-box" style="width:60px;height:60px;border-radius:6px;background:#ddd;margin-bottom:8px;"></div>
+        <button class="demo-btn" id="btn-color">Randomize</button>
+      </div>
+
+      <div class="demo-card">
+        <h3>Console errors</h3>
+        <p>Trigger errors & warnings.</p>
+        <button class="demo-btn" id="btn-error">Throw error</button>
+        <button class="demo-btn" id="btn-warn">Throw warning</button>
+      </div>
+
+      <div class="demo-card">
+        <h3>A11y traps</h3>
+        <p>Click these non-accessible elements.</p>
+        <div id="fake-btn" style="padding:8px 14px;background:#e0e0e0;border-radius:6px;text-align:center;cursor:pointer;margin-bottom:6px;font-size:0.85rem;">I look like a button</div>
+        <span id="fake-link" style="color:#4a6cf7;text-decoration:underline;cursor:pointer;font-size:0.85rem;">I look like a link</span>
+      </div>
+
+      <div class="demo-card">
+        <h4>Audit traps</h4>
+        <p>Static a11y issues below.</p>
+        <img src="https://picsum.photos/60/60" style="border-radius:6px;margin-bottom:6px;">
+        <input type="text" placeholder="" style="padding:6px;border:1px solid #ccc;border-radius:4px;width:100%;font-size:0.85rem;">
+        <a href="#" style="font-size:0.85rem;"></a>
+      </div>
+    </div>
+
+    <script type="module" src="/dev/main.ts"></script>
+  </body>
+</html>

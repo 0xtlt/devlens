@@ -1,3 +1,4 @@
+/** Default config merged on top of whatever the user passes to `devlens()`. */
 import type { DevLensConfig } from './types'
 
 export const defaultConfig: DevLensConfig = {

@@ -1,3 +1,4 @@
+/** Injects the panel's base CSS into <head>. Idempotent. */
 let injected = false
 
 export function injectStyles() {
