@@ -215,7 +215,7 @@ export function a11yAuditPlugin(): DevLensPlugin {
       entry.box.style.top = `${rect.top + sy}px`
       entry.box.style.width = `${rect.width}px`
       entry.box.style.height = `${rect.height}px`
-      entry.badge.style.left = `${rect.right + sx + entry.badgeLeftDelta}px`
+      entry.badge.style.left = `${rect.left + sx + entry.badgeLeftDelta}px`
       entry.badge.style.top = `${rect.top + sy + entry.badgeTopDelta}px`
     }
   }
@@ -252,9 +252,6 @@ export function a11yAuditPlugin(): DevLensPlugin {
       grouped.set(el, list)
     }
 
-    // Track badge bottom positions to avoid overlaps
-    const badgeBottoms: number[] = []
-
     for (const [el, elIssues] of grouped) {
       const rect = (el as HTMLElement).getBoundingClientRect()
       if (rect.width === 0 && rect.height === 0) continue
@@ -290,21 +287,16 @@ export function a11yAuditPlugin(): DevLensPlugin {
       `
       badge.textContent = lines
 
-      // Position badge above the element, push down if overlapping
-      let badgeTop = rect.top - 18
+      // Place the badge above the element's top-left corner. If there
+      // isn't enough room above, tuck it just inside the top-left instead.
       const badgeLineCount = elIssues.length
       const badgeHeight = 14 + badgeLineCount * 13
-
-      for (const prevBottom of badgeBottoms) {
-        if (badgeTop < prevBottom && badgeTop + badgeHeight > prevBottom - badgeHeight) {
-          badgeTop = prevBottom + 4
-        }
-      }
-
-      const badgeLeft = rect.right - 4
+      const gap = 4
+      let badgeTop = rect.top - badgeHeight - gap
+      if (badgeTop < gap) badgeTop = rect.top + gap
+      const badgeLeft = rect.left
       badge.style.left = `${badgeLeft + sx}px`
       badge.style.top = `${badgeTop + sy}px`
-      badgeBottoms.push(badgeTop + badgeHeight)
 
       document.body.append(highlight)
       document.body.append(badge)
@@ -314,7 +306,7 @@ export function a11yAuditPlugin(): DevLensPlugin {
         box: highlight,
         badge,
         target: el,
-        badgeLeftDelta: badgeLeft - rect.right,
+        badgeLeftDelta: badgeLeft - rect.left,
         badgeTopDelta: badgeTop - rect.top,
       })
     }
