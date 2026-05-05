@@ -25,6 +25,8 @@ export interface DevLensPlugin {
   onMount?: (container: HTMLElement) => void
   /** Runs when leaving the tab. Should release any resources the plugin owns. */
   onUnmount?: () => void
+  /** Stops live behavior owned by the plugin without removing it from the panel. */
+  deactivate?: () => void
 }
 
 /** Runtime configuration for a DevLens instance. */

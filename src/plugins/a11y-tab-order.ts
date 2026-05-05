@@ -4,68 +4,10 @@
  * values become visible.
  */
 import type { DevLensPlugin } from '../types.js'
+import { getFocusableElements as collectFocusableElements } from './a11y-utils.js'
 
 const STORAGE_KEY = 'devlens:a11y-tab'
 const OVERLAY_CLASS = 'devlens-tab-badge'
-
-const FOCUSABLE_SELECTOR = [
-  'a[href]',
-  'button',
-  'input:not([type="hidden"])',
-  'select',
-  'textarea',
-  '[tabindex]',
-  'summary',
-  '[contenteditable="true"]',
-  '[contenteditable=""]',
-  '[role="button"]',
-  '[role="link"]',
-  '[role="tab"]',
-  '[role="menuitem"]',
-  'audio[controls]',
-  'video[controls]',
-  'iframe',
-].join(',')
-
-// Returns true only if the element is actually reachable by keyboard tab.
-// Handles disabled, aria-disabled, inert, tabindex=-1, hidden ancestors
-// and disabled fieldsets — all cases CSS selectors alone can't cover.
-function isTabbable(el: HTMLElement): boolean {
-  // tabindex="-1" removes the element from the sequential tab order
-  const tabindexAttr = el.getAttribute('tabindex')
-  if (tabindexAttr !== null && parseInt(tabindexAttr, 10) < 0) return false
-
-  // Native disabled on form controls
-  if ('disabled' in el && (el as HTMLInputElement | HTMLButtonElement | HTMLSelectElement | HTMLTextAreaElement).disabled) return false
-
-  // A disabled <fieldset> disables its descendants (except the first legend)
-  const disabledFieldset = el.closest('fieldset[disabled]')
-  if (disabledFieldset) {
-    const firstLegend = disabledFieldset.querySelector(':scope > legend:first-of-type')
-    if (!firstLegend || !firstLegend.contains(el)) return false
-  }
-
-  // ARIA disabled
-  if (el.getAttribute('aria-disabled') === 'true') return false
-
-  // aria-hidden removes the element from the accessibility tree — still
-  // technically focusable, but a11y-wise we want to flag it as unreachable.
-  if (el.closest('[aria-hidden="true"]')) return false
-
-  // HTML5 inert attribute (on the element or any ancestor)
-  if (el.closest('[inert]')) return false
-
-  // Visibility
-  const style = getComputedStyle(el)
-  if (style.display === 'none') return false
-  if (style.visibility === 'hidden' || style.visibility === 'collapse') return false
-
-  // offsetParent is null when the element (or an ancestor) is display:none
-  // — except for position:fixed elements which keep their own layout.
-  if (el.offsetParent === null && style.position !== 'fixed') return false
-
-  return true
-}
 
 function loadActive(): boolean {
   try { return localStorage.getItem(STORAGE_KEY) === '1' } catch { return false }
@@ -145,8 +87,7 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
   }
 
   function getFocusableElements(): HTMLElement[] {
-    return [...document.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR)]
-      .filter((el) => !el.closest('#devlens') && isTabbable(el))
+    return collectFocusableElements(document)
   }
 
   function clearBadges() {
@@ -357,5 +298,7 @@ export function a11yTabOrderPlugin(): DevLensPlugin {
     },
 
     onUnmount() {},
+
+    deactivate: stop,
   }
 }

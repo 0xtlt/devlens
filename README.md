@@ -60,6 +60,7 @@ Each plugin is a factory — call it to get a plugin instance, pass the result t
 | `a11yAuditPlugin()` | ♿ A11y Audit | DOM audit for missing `lang`, heading skips, unlabeled inputs, empty links or buttons, duplicate ids, autoplaying media and more. Draws dashed overlays on offenders. |
 | `a11yTabOrderPlugin()` | 🔢 Tab Order | Numbers every focusable element in the order the keyboard will visit them, making tab traps and positive `tabindex` values obvious. |
 | `a11yClickAuditPlugin()` | 👆 Click Audit | Flags clicks that land on non-semantic elements (`div`, `span`, `img`) carrying click handlers but no `role` + `tabindex`. |
+| `accessibleInspectorPlugin()` | 🧭 Inspect | Lets you pick an element on the page, highlights the hover target, then opens a modal with a DOM-derived accessibility tree and global tab order. |
 | `seoPlugin()` | 🔍 SEO | Checks title length, meta description, Open Graph (ogp.me required + recommended), Twitter Card, canonical, robots, charset, viewport, hreflang and JSON-LD. |
 | `headingsPlugin()` | 🗂 Headings | Renders the h1–h6 outline. Flags level skips, empty headings, missing / multiple h1, hidden headings. Click a row to scroll + flash the element on the page. |
 
@@ -175,6 +176,7 @@ src/
     a11y-audit.ts
     a11y-tab-order.ts
     a11y-click-audit.ts
+    accessible-inspector.ts
     seo.ts
     headings.ts
 ```

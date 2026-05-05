@@ -12,6 +12,7 @@ import { repaintsPlugin } from './plugins/repaints.js'
 import { consolePlugin } from './plugins/console.js'
 import { a11yTabOrderPlugin } from './plugins/a11y-tab-order.js'
 import { a11yClickAuditPlugin } from './plugins/a11y-click-audit.js'
+import { accessibleInspectorPlugin } from './plugins/accessible-inspector.js'
 import { a11yAuditPlugin } from './plugins/a11y-audit.js'
 import { seoPlugin } from './plugins/seo.js'
 import { headingsPlugin } from './plugins/headings.js'
@@ -22,6 +23,7 @@ export { repaintsPlugin } from './plugins/repaints.js'
 export { consolePlugin } from './plugins/console.js'
 export { a11yTabOrderPlugin } from './plugins/a11y-tab-order.js'
 export { a11yClickAuditPlugin } from './plugins/a11y-click-audit.js'
+export { accessibleInspectorPlugin } from './plugins/accessible-inspector.js'
 export { a11yAuditPlugin } from './plugins/a11y-audit.js'
 export { seoPlugin } from './plugins/seo.js'
 export { headingsPlugin } from './plugins/headings.js'
@@ -45,6 +47,7 @@ export function allPlugins(): DevLensPlugin[] {
     a11yAuditPlugin(),
     a11yTabOrderPlugin(),
     a11yClickAuditPlugin(),
+    accessibleInspectorPlugin(),
     seoPlugin(),
     headingsPlugin(),
   ]

@@ -281,5 +281,7 @@ export function a11yClickAuditPlugin(): DevLensPlugin {
     },
 
     onUnmount() {},
+
+    deactivate: stop,
   }
 }

@@ -40,10 +40,20 @@ export function createPanel(config: DevLensConfig) {
   const nav = document.createElement('nav')
   nav.className = 'devlens__nav'
 
+  const stopAll = document.createElement('button')
+  stopAll.className = 'devlens__stop-all'
+  stopAll.type = 'button'
+  stopAll.textContent = 'Stop all'
+  stopAll.title = 'Stop all active DevLens plugins'
+
+  const navBar = document.createElement('div')
+  navBar.className = 'devlens__nav-bar'
+  navBar.append(nav, stopAll)
+
   const content = document.createElement('div')
   content.className = 'devlens__content'
 
-  container.append(nav, content)
+  container.append(navBar, content)
   root.append(toggle, container)
   document.body.append(root)
 
@@ -99,9 +109,18 @@ export function createPanel(config: DevLensConfig) {
     }
   }
 
+  function refreshActivePlugin() {
+    if (activePlugin) showPlugin(activePlugin)
+  }
+
   toggle.addEventListener('click', () => {
     isOpen = !isOpen
     updateVisibility()
+  })
+
+  stopAll.addEventListener('click', () => {
+    for (const plugin of config.plugins) plugin.deactivate?.()
+    refreshActivePlugin()
   })
 
   document.addEventListener('keydown', (e) => {

@@ -298,5 +298,7 @@ export function repaintsPlugin(): DevLensPlugin {
     onUnmount() {
       // keep tracking active even when switching tabs
     },
+
+    deactivate: stop,
   }
 }

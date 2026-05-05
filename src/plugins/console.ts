@@ -171,5 +171,7 @@ export function consolePlugin(): DevLensPlugin {
     },
 
     onUnmount() {},
+
+    deactivate: stop,
   }
 }

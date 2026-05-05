@@ -84,14 +84,22 @@ export function injectStyles() {
       flex-direction: column;
     }
 
-    .devlens__nav {
+    .devlens__nav-bar {
       display: flex;
+      align-items: center;
       gap: 2px;
       padding: 6px;
       background: var(--dl-bg-secondary);
       border-bottom: 1px solid var(--dl-border);
-      overflow-x: auto;
       flex-shrink: 0;
+    }
+
+    .devlens__nav {
+      display: flex;
+      gap: 2px;
+      overflow-x: auto;
+      min-width: 0;
+      flex: 1;
     }
 
     .devlens__nav-item {
@@ -115,6 +123,26 @@ export function injectStyles() {
     .devlens__nav-item--active {
       background: var(--dl-bg);
       color: var(--dl-accent);
+    }
+
+    .devlens__stop-all {
+      padding: 6px 10px;
+      border: 1px solid var(--dl-accent);
+      background: #3a1a1a;
+      color: var(--dl-accent);
+      font-family: var(--dl-font);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 4px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .devlens__stop-all:hover {
+      background: var(--dl-accent);
+      color: #fff;
     }
 
     .devlens__content {

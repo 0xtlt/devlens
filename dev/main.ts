@@ -1,4 +1,4 @@
-import { devlens, networkPlugin, repaintsPlugin, consolePlugin, a11yTabOrderPlugin, a11yClickAuditPlugin, a11yAuditPlugin, seoPlugin, headingsPlugin } from '../src/index'
+import { devlens, networkPlugin, repaintsPlugin, consolePlugin, a11yTabOrderPlugin, a11yClickAuditPlugin, accessibleInspectorPlugin, a11yAuditPlugin, seoPlugin, headingsPlugin } from '../src/index'
 
 devlens({
   plugins: [
@@ -35,6 +35,7 @@ devlens({
     consolePlugin(),
     a11yTabOrderPlugin(),
     a11yClickAuditPlugin(),
+    accessibleInspectorPlugin(),
     a11yAuditPlugin(),
     seoPlugin(),
     headingsPlugin(),

@@ -205,6 +205,7 @@ export function a11yAuditPlugin(): DevLensPlugin {
   let lastIssueKeys = new Set<string>()
   let scanTimeout: ReturnType<typeof setTimeout> | null = null
   let showHighlights = true
+  let active = true
   let viewportTicking = false
   let viewportListenersAttached = false
 
@@ -264,6 +265,13 @@ export function a11yAuditPlugin(): DevLensPlugin {
     window.addEventListener('resize', onViewportChange, { passive: true })
   }
 
+  function detachViewportListeners() {
+    if (!viewportListenersAttached) return
+    viewportListenersAttached = false
+    window.removeEventListener('scroll', onViewportChange, { capture: true } as EventListenerOptions)
+    window.removeEventListener('resize', onViewportChange)
+  }
+
   // Scrolls the target into view and draws a short-lived bright outline
   // on top of it. Invoked when the user clicks an issue row in the panel.
   // Uses position:absolute + document coordinates so the flash stays
@@ -293,7 +301,7 @@ export function a11yAuditPlugin(): DevLensPlugin {
 
   function renderHighlights(issues: AuditIssue[]) {
     clearHighlights()
-    if (!showHighlights) return
+    if (!active || !showHighlights) return
 
     // Group issues by target element. A single issue can carry several
     // targets (e.g. every duplicate h1), so we iterate targets[].
@@ -372,6 +380,7 @@ export function a11yAuditPlugin(): DevLensPlugin {
   }
 
   function scan() {
+    if (!active) return []
     const issues = runAudit()
     const newKeys = new Set(issues.map(issueKey))
 
@@ -391,12 +400,13 @@ export function a11yAuditPlugin(): DevLensPlugin {
   }
 
   function debouncedScan() {
+    if (!active) return
     if (scanTimeout) clearTimeout(scanTimeout)
     scanTimeout = setTimeout(() => scan(), 500)
   }
 
   function startObserver() {
-    if (observer) return
+    if (!active || observer) return
     observer = new MutationObserver((mutations) => {
       const allDevlens = mutations.every((m) => {
         const t = m.target instanceof Element ? m.target : m.target.parentElement
@@ -411,7 +421,28 @@ export function a11yAuditPlugin(): DevLensPlugin {
     observer.observe(document.body, { childList: true, subtree: true, attributes: true })
   }
 
-  // Auto-start
+  function stopObserver() {
+    observer?.disconnect()
+    observer = null
+    if (scanTimeout) clearTimeout(scanTimeout)
+    scanTimeout = null
+  }
+
+  function start() {
+    if (active) return
+    active = true
+    startObserver()
+    scan()
+  }
+
+  function stop() {
+    if (!active) return
+    active = false
+    stopObserver()
+    clearHighlights()
+    detachViewportListeners()
+  }
+
   startObserver()
   scan()
 
@@ -429,8 +460,8 @@ export function a11yAuditPlugin(): DevLensPlugin {
       const root = container.querySelector('.devlens-a11y-audit') as HTMLElement
 
       const render = () => {
-        const issues = runAudit()
-        renderHighlights(issues)
+        const issues = active ? runAudit() : []
+        if (active) renderHighlights(issues)
         const errors = issues.filter((i) => i.severity === 'error')
         const warnings = issues.filter((i) => i.severity === 'warn')
 
@@ -441,8 +472,8 @@ export function a11yAuditPlugin(): DevLensPlugin {
         const orderedIssues: AuditIssue[] = []
 
         const issueRows = issues.length === 0
-          ? `<div style="padding:8px 10px;background:#1a3a1a;border-radius:4px;border-left:3px solid #4caf50;font-size:12px;color:#8a8a9a;">
-              No accessibility issues detected!
+          ? `<div style="padding:8px 10px;background:${active ? '#1a3a1a' : '#3a2e1a'};border-radius:4px;border-left:3px solid ${active ? '#4caf50' : '#f0a030'};font-size:12px;color:#8a8a9a;">
+              ${active ? 'No accessibility issues detected!' : 'Accessibility audit is disabled.'}
             </div>`
           : categories.map((cat) => {
               const catIssues = issues.filter((i) => i.category === cat)
@@ -473,17 +504,24 @@ export function a11yAuditPlugin(): DevLensPlugin {
 
         root.innerHTML = `
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;">
-            <span style="font-size:12px;color:#8a8a9a;">Auto-scans on DOM changes</span>
+            <span style="font-size:12px;color:#8a8a9a;">${active ? 'Auto-scans on DOM changes' : 'Audit paused'}</span>
             <div style="display:flex;gap:6px;">
               <button id="devlens-a11y-highlight" style="
                 padding:4px 10px;border:1px solid #0f3460;border-radius:4px;cursor:pointer;
                 font-family:var(--dl-font);font-size:11px;background:transparent;
                 color:${showHighlights ? '#4caf50' : '#8a8a9a'};
-              ">${showHighlights ? 'Hide overlays' : 'Show overlays'}</button>
+              " ${active ? '' : 'disabled'}>${showHighlights ? 'Hide overlays' : 'Show overlays'}</button>
               <button id="devlens-a11y-rescan" style="
                 padding:4px 10px;border:1px solid #0f3460;border-radius:4px;cursor:pointer;
                 font-family:var(--dl-font);font-size:11px;background:transparent;color:#8a8a9a;
-              ">Re-scan</button>
+              " ${active ? '' : 'disabled'}>Re-scan</button>
+              <button id="devlens-a11y-toggle" style="
+                padding:4px 14px;border:none;border-radius:4px;cursor:pointer;
+                font-family:var(--dl-font);font-size:12px;font-weight:600;
+                background:${active ? '#3a1a1a' : '#1a3a1a'};
+                color:${active ? '#e94560' : '#4caf50'};
+                border:1px solid ${active ? '#e94560' : '#4caf50'};
+              ">${active ? 'Stop' : 'Start'}</button>
             </div>
           </div>
 
@@ -496,7 +534,13 @@ export function a11yAuditPlugin(): DevLensPlugin {
         `
 
         root.querySelector('#devlens-a11y-rescan')?.addEventListener('click', render)
+        root.querySelector('#devlens-a11y-toggle')?.addEventListener('click', () => {
+          if (active) stop()
+          else start()
+          render()
+        })
         root.querySelector('#devlens-a11y-highlight')?.addEventListener('click', () => {
+          if (!active) return
           showHighlights = !showHighlights
           if (!showHighlights) clearHighlights()
           render()
@@ -519,5 +563,7 @@ export function a11yAuditPlugin(): DevLensPlugin {
     },
 
     onUnmount() {},
+
+    deactivate: stop,
   }
 }
